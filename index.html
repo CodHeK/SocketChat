@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SocketChat</title>
+	<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+<style type="text/css">
+	body {
+		margin-top: 30px;
+	}
+
+	#messageArea {
+		display: none;
+	}
+</style>
+</head>
+<body>
+	<div class="container">
+	<div class="row" id="userFormArea">
+		<div class="col-md-12">
+			<form id="userForm">
+				<div class="form-group">
+					<label>Enter Username:</label><br>
+					<input type="text" class="form-control" id="username">
+					<br>
+					<input type="submit" class="btn btn-default" name="" value="Set Name">
+				</div>
+			</form>
+		</div>
+	</div>
+		<div id="messageArea" class="row">
+			<div class="col-md-4">
+				<div class="well">
+					<h3>Online Users</h3>
+					<hr>
+					<div id="users" class="list-group"></div>
+				</div>
+			</div>
+			<div class="col-md-8">
+				<div class="chat" id="chat"></div>
+				<form id="messageForm">
+					<div class="form-group">
+						<label>Enter Message</label>
+						<textarea class="form-control" id="message" placeholder="Type a message..."></textarea>
+						<br><input type="submit" name="" class="btn btn-default" value="Send">
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$(function() {
+			var socket = io.connect();
+			var $messageForm = $('#messageForm');
+
+			var $message = $('#message');
+
+			var $chat = $('#chat');
+			var $messageArea = $('#messageArea'); 
+			var $userForm = $('#userForm');
+			var $username = $('#username');
+			var $userFormArea = $('#userFormArea');
+			var $users = $('#users');
+
+
+			$userForm.submit(function(e){
+				e.preventDefault();
+				//console.log("Submitted");
+				socket.emit('new user', $username.val(), function(data) {
+					if(data) {
+						$userFormArea.hide();
+						$messageArea.show(); 
+					}
+				});
+				$message.val(''); 
+			});			
+
+
+			$messageForm.submit(function(e){
+				e.preventDefault();
+				//console.log("Submitted");
+				socket.emit('send message', $message.val());
+				$message.val(''); 
+			});
+
+
+			socket.on('new message', function(data) {
+				$chat.append('<div class="well"><strong>'+data.user+'</strong>: ' +data.msg+'</div>');
+			});
+
+			socket.on('get users', function(data) {
+				var html = '';
+				for(var i=0;i<data.length;i++) {
+						html += '<li class="list-group-item" style="border: 2px solid green;">'+data[i]+'</li><br>';
+				}
+				$users.html(html);
+			});
+		});
+	</script>
+</body>
+</html>
